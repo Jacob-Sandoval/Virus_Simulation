@@ -1,1 +1,17 @@
+//Planning page
 
+
+Process:
+
+-> Simulate length of flight (t_i) -> random select from kaggle set
+-> Simulate proximity infection
+    -> For each neighbor: p(infection) = f(t_i)
+    -> When infected, simulate incubation period -> triangle distribution
+-> Simulate bathroom infection
+    -> For each passenger: p(infection) = (poission process of visits) * (exponential decay of contamination)
+    -> When infected, simulate incubation period -> triangle distribution
+-> Sort for layovers vs final destination
+-> For remaining and infeccted, simulate layover waiting time -> normal distribution
+
+
+-> Repeat for all infected until t_final = T = 48
