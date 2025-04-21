@@ -1,5 +1,11 @@
 //Planning page
 
+Assumptions:
+
+-> Patient zero and those that become infected go to the bathroom within the first 20 mins?
+-> Will a passenger go to the bathroom? Distribution that a passenger goes to the bathroom: 
+    Following source gives 4-10 times per day (average 6-7), so once or less expected in 2-4 hour time period: 
+        https://www.siloamhospitals.com/en/informasi-siloam/artikel/here-is-the-normal-urination-frequency-are-you-aware
 
 Process:
 
