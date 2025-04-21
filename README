@@ -3,7 +3,7 @@
 
 Process:
 
--> Simulate length of flight (t_i) -> random select from kaggle set
+-> Simulate length of flight (t_i) -> random select from "flights_southwest.csv". Use column "air_time"
 -> Simulate proximity infection
     -> For each neighbor: p(infection) = f(t_i)
     -> When infected, simulate incubation period -> triangle distribution
@@ -14,4 +14,4 @@ Process:
 -> For remaining and infeccted, simulate layover waiting time -> normal distribution
 
 
--> Repeat for all infected until t_final = T = 48
+-> Repeat for all infected until t_final = T = 48h = 2880
