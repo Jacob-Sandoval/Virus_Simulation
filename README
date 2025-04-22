@@ -12,7 +12,7 @@ Process:
 -> Simulate length of flight (t_i) -> random select from "flights_southwest.csv". Use column "air_time"
 -> Simulate proximity infection
     -> For each neighbor: p(infection) = f(t_i)
-    -> When infected, simulate incubation period -> triangle distribution
+    -> When infected, simulate incubation period -> triangle distribution (example: (2,3,4))
 -> Simulate bathroom infection
     -> For each passenger: p(infection) = (poission process of visits) * (exponential decay of contamination)
     -> When infected, simulate incubation period -> triangle distribution
