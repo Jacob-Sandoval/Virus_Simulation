@@ -1,0 +1,41 @@
+import simpy
+import random
+import numpy as np
+ 
+NUM_PASSENGERS = 175
+ 
+class Passenger:
+    def __init__(self, env, pid, infected=False):
+        self.env = env
+        self.pid = pid
+        self.infected = infected
+        self.incubating = False
+        self.contagious = False
+        self.newly_infected = False
+        self.seat = None
+ 
+        if self.infected:
+            self.env.process(self.start_incubation())
+ 
+    def start_incubation(self):
+        self.incubating = True
+        incubation_time = random.uniform(180, 360)  # 3–6 hours in minutes
+        yield self.env.timeout(incubation_time)
+        self.incubating = False
+        self.contagious = True
+ 
+class Flight:
+    def __init__(self, env, flight_time, flight_id, occupancy=NUM_PASSENGERS, infected_passengers=[]):
+        self.env = env
+        self.flight_time = flight_time
+        self.flight_id = flight_id
+        self.occupancy = occupancy
+        self.infected_passengers = infected_passengers
+ 
+        self.rows = (NUM_PASSENGERS + 5) // 6  # 6 seats per row (A–F)
+        self.seating = {}  # seat -> Passenger
+        self.bathroom = simpy.Resource(env, capacity=1)
+        self.bathroom_infected = False
+        self.bathroom_clean_time = 0
+ 
+        self.passengers = [
