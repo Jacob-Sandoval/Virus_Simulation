@@ -1,7 +1,9 @@
 import simpy
 import random
 import math
+import pandas as pd
 
+flight_time = pd.read_csv("flights_southwest.csv")
 NUM_PASSENGERS = 175
 
 class Passenger:
@@ -149,8 +151,9 @@ def generate_layover():
     return max(30, min(180, random.normalvariate(105, 25)))
 
 def generate_flight_duration():
-    """Generate random flight duration between 90 and 300 minutes, centered at 180."""
-    return max(90, min(300, random.normalvariate(180, 45)))
+    """randomly select a flight time from the logs sheet"""
+    airtimes = flight_time["air_time"].dropna().astype(float)
+    return random.choice(airtimes.tolist())
 
 def run():
     SIM_DURATION = 48 * 60  # 48 hours
