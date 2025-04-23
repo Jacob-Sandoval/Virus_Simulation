@@ -38,4 +38,138 @@ class Flight:
         self.bathroom_infected = False
         self.bathroom_clean_time = 0
  
-        self.passengers = [
+        self.passengers = [import simpy
+import random
+import numpy as np
+ 
+NUM_PASSENGERS = 175
+ 
+class Passenger:
+    def __init__(self, env, pid, infected=False):
+        self.env = env
+        self.pid = pid
+        self.infected = infected
+        self.incubating = False
+        self.contagious = False
+        self.newly_infected = False
+        self.seat = None
+ 
+        if self.infected:
+            self.env.process(self.start_incubation())
+ 
+    def start_incubation(self):
+        self.incubating = True
+        incubation_time = random.uniform(180, 360)  # 3–6 hours in minutes
+        yield self.env.timeout(incubation_time)
+        self.incubating = False
+        self.contagious = True
+ 
+class Flight:
+    def __init__(self, env, flight_time, flight_id, occupancy=NUM_PASSENGERS, infected_passengers=[]):
+        self.env = env
+        self.flight_time = flight_time
+        self.flight_id = flight_id
+        self.occupancy = occupancy
+        self.infected_passengers = infected_passengers
+ 
+        self.rows = (NUM_PASSENGERS + 5) // 6  # 6 seats per row (A–F)
+        self.seating = {}  # seat -> Passenger
+        self.bathroom = simpy.Resource(env, capacity=1)
+        self.bathroom_infected = False
+        self.bathroom_clean_time = 0
+ 
+        self.passengers = []
+ 
+        self._assign_seats()
+        self.env.process(self.run_flight())
+ 
+    def _assign_seats(self):
+        # Create passengers
+        passenger_pool = [Passenger(self.env, pid=i) for i in range(self.occupancy)]
+ 
+        # Assign infected status
+        infected_indices = random.sample(range(self.occupancy), len(self.infected_passengers))
+        for idx in infected_indices:
+            passenger_pool[idx].infected = True
+            self.env.process(passenger_pool[idx].start_incubation())
+ 
+        # Random seat assignment
+        seats = [(r, c) for r in range(self.rows) for c in range(6)]
+        assigned_seats = random.sample(seats, self.occupancy)
+        for passenger, seat in zip(passenger_pool, assigned_seats):
+            passenger.seat = seat
+            self.seating[seat] = passenger
+            self.passengers.append(passenger)
+ 
+    def run_flight(self):
+        # Start bathroom use
+        for p in self.passengers:
+            self.env.process(self.bathroom_behavior(p))
+ 
+        # Handle row infections every 5 minutes
+        while self.env.now < self.flight_time:
+            yield self.env.timeout(5)
+            self.handle_row_infection()
+ 
+        # End of flight
+        self.finish_flight()
+ 
+    def handle_row_infection(self):
+        for r in range(self.rows):
+            row_passengers = [p for p in self.passengers if p.seat[0] == r]
+            contagious_in_row = any(p.contagious for p in row_passengers)
+            if contagious_in_row:
+                for p in row_passengers:
+                    if not (p.infected or p.incubating or p.newly_infected):
+                        if random.random() < random.uniform(0.05, 0.15):  # Uniform chance
+                            p.newly_infected = True
+                            p.infected = True
+                            self.env.process(p.start_incubation())
+ 
+    def bathroom_behavior(self, passenger):
+        while self.env.now < self.flight_time:
+            lam = 2 if passenger.contagious else 0.5
+            wait_time = random.expovariate(lam)
+            yield self.env.timeout(wait_time)
+ 
+            with self.bathroom.request() as req:
+                yield req
+                yield self.env.timeout(2)  # Duration in bathroom
+ 
+                # Contaminate bathroom if contagious
+                if passenger.contagious:
+                    self.bathroom_infected = True
+                    decay = random.expovariate(1/30)  # avg 30 mins infectious
+                    self.bathroom_clean_time = self.env.now + decay
+ 
+                # Infection from contaminated bathroom
+                if self.bathroom_infected and self.env.now < self.bathroom_clean_time:
+                    if not (passenger.infected or passenger.incubating or passenger.newly_infected):
+                        if random.random() < 0.1:  # Uniform probability
+                            passenger.newly_infected = True
+                            passenger.infected = True
+                            self.env.process(passenger.start_incubation())
+ 
+    def finish_flight(self):
+        new_infected = [p for p in self.passengers if p.newly_infected]
+        departing = [p for p in self.passengers if not p.contagious]  # Placeholder logic
+        continuing = []  # Placeholder: fill based on routing logic
+ 
+        print(f"\nFlight {self.flight_id} Summary at {self.env.now:.1f} min")
+        print(f"Total passengers: {len(self.passengers)}")
+        print(f"New infections: {len(new_infected)}")
+        print(f"Departing passengers: {len(departing)}")
+        print(f"Placeholder - continuing passengers: {len(continuing)}")
+ 
+        return new_infected, departing, continuing
+ 
+def run():
+    env = simpy.Environment()
+    # For test: infect 5 passengers
+    infected_passenger_objs = [Passenger(env, pid=i, infected=True) for i in range(5)]
+    f = Flight(env, flight_time=240, flight_id=1, occupancy=175, infected_passengers=infected_passenger_objs)
+    env.run(until=300)
+ 
+run()
+ 
+ 
