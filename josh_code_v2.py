@@ -144,7 +144,7 @@ class Flight:
         print(f"Departing passengers: {len(departing)}")
         print(f"Placeholder - continuing passengers: {len(continuing)}")
 
-        return infected, new_infected
+        return [p.pid for p in infected], new_infected
 
 def generate_layover():
     """Generate layover time in minutes between 30 and 180, centered at 105."""
@@ -164,7 +164,7 @@ def run():
     flights = []
 
     initial_infected = [Passenger(env, pid=i, infected=True) for i in range(5)]
-    total_infected =len(initial_infected)
+    total_infected = set(p.pid for p in initial_infected)  # Track unique infected passenger IDs
     # print(total_infected)
     first_duration = generate_flight_duration()
 
@@ -175,20 +175,21 @@ def run():
     def flight_chain(flight, flight_end_time):
         yield env.timeout(flight.flight_time)
         nonlocal flight_id, total_infected
-        infected, new_infected = flight.finish_flight()
-        # print(new_infected)
-        total_infected+= new_infected
+        infected_ids, new_infected = flight.finish_flight()
+
+        total_infected.update(infected_ids)
         
         layover_groups = {}
 
-        for p in infected:
-            layover = generate_layover()
-            next_departure = flight_end_time + layover
+        for p in flight.passengers:
+            if p.pid in infected_ids:
+                layover = generate_layover()
+                next_departure = flight_end_time + layover
 
-            if next_departure < SIM_DURATION:
-                if next_departure not in layover_groups:
-                    layover_groups[next_departure] = []
-                layover_groups[next_departure].append(p)
+                if next_departure < SIM_DURATION:
+                    if next_departure not in layover_groups:
+                        layover_groups[next_departure] = []
+                    layover_groups[next_departure].append(p)
 
         for departure_time, passengers in layover_groups.items():
             flight_id += 1
@@ -205,7 +206,7 @@ def run():
     print("\n==== Simulation Complete ====")
     print(f"Total Flights Simulated: {len(flights)}")
     # total_infected = sum(len(f.infected_passengers) for f in flights)
-    print(f"Total Infected (cumulative, may include duplicates): {total_infected}")
+    print(f"Total Infected (cumulative, may include duplicates): {len(total_infected)}")
 
 if __name__ == "__main__":
     run()
