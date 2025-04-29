@@ -123,7 +123,7 @@ class Flight:
                 if self.bathroom_infected and self.env.now < self.bathroom_clean_time:
                     if not (passenger.infected or passenger.incubating or passenger.newly_infected):
                         initial_infection_prob = 0.50
-                        k = 0.00153  # decay rate per minute (~2.2/day)
+                        k = 0.00153   decay rate per minute (~2.2/day)
                         t = self.env.now - self.bathroom_infection_time
                         current_infection_prob = initial_infection_prob * math.exp(-k * t)
                         if random.random() < current_infection_prob:
@@ -213,7 +213,6 @@ def run():
 
     print("\n==== Simulation Complete ====")
     print(f"Total Flights Simulated: {len(flights)}")
-    # total_infected = sum(len(f.infected_passengers) for f in flights)
     print(f"Total Newly Infected (cumulative, may include duplicates): {new_infected}")
     print(f"Total Infected (cumulative): {len(total_infected)}")
     
@@ -229,10 +228,10 @@ if __name__ == "__main__":
         num_flights, newly, total = run()
         results.append({'run':i+1, 'total_flights':num_flights, 'newly_infected':newly, 'total_infected':total})
         
-    # Save to CSV: from ChatGPT
+    # save to csv
     with open("simulation_results.csv", "w", newline="") as csvfile:
         fieldnames = ["run", "total_flights", "newly_infected", "total_infected"]
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        tocsv = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-        writer.writeheader()
-        writer.writerows(results)
+        tocsv.writeheader()
+        tocsv.writerows(results)
